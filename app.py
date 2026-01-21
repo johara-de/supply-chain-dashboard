@@ -6,29 +6,32 @@ DELIV_URL = "https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_j
 
 @st.cache_data(ttl=300)
 def load_data():
+    # Load raw data
     prod = pd.read_csv(PROD_URL)
     deliv = pd.read_csv(DELIV_URL)
-    
-# Debug: show all column names
-st.write("Delivered sheet columns:", deliv.columns.tolist())
-st.write(deliv.head())
 
-deliv.columns = deliv.columns.str.strip().str.replace(" ", "_").str.lower()
-# Example: 'Delivered Date' -> 'delivered_date'
-deliv["delivered_date"] = pd.to_datetime(deliv["delivered_date"], errors="coerce")
+    # Clean column names (strip spaces, lowercase, replace spaces with _)
+    prod.columns = prod.columns.str.strip().str.replace(" ", "_").str.lower()
+    deliv.columns = deliv.columns.str.strip().str.replace(" ", "_").str.lower()
 
-    # Safe date parsing
-    prod["eventDate"] = pd.to_datetime(prod["eventDate"], errors="coerce")
-    deliv["deliveredDate"] = pd.to_datetime(deliv["deliveredDate"], errors="coerce")
+    # Parse dates safely
+    prod["eventdate"] = pd.to_datetime(prod["eventdate"], errors="coerce")
+    deliv["delivered_date"] = pd.to_datetime(deliv["delivered_date"], errors="coerce")
 
-    # Filter 2025
-    prod = prod[prod["eventDate"].dt.year == 2025]
-    deliv = deliv[deliv["deliveredDate"].dt.year == 2025]
+    # Filter for 2025
+    prod = prod[prod["eventdate"].dt.year == 2025]
+    deliv = deliv[deliv["delivered_date"].dt.year == 2025]
 
     return prod, deliv
 
+# Load data
 prod_df, deliv_df = load_data()
-st.write("Data loaded successfully ✅")
+
+# Debug: show first few rows
+st.write("Production columns:", prod_df.columns.tolist())
+st.write(prod_df.head())
+st.write("Delivered columns:", deliv_df.columns.tolist())
+st.write(deliv_df.head())
 
 # ---------------------------
 # Merge supplier into production
@@ -162,12 +165,6 @@ country_perf = deliv_df.groupby("delivery_country_code").agg(
 st.dataframe(
     country_perf.style.format({"Delivered_On_Time": "{:.0%}"})
 )
-
-st.write("Production columns:", prod_df.columns)
-st.write("Delivered columns:", deliv_df.columns)
-st.write(prod_df.head())
-st.write(deliv_df.head())
-
 
 # ---------------------------
 # Footer
