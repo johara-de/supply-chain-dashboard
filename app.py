@@ -152,6 +152,12 @@ st.dataframe(
     country_perf.style.format({"Delivered_On_Time": "{:.0%}"})
 )
 
+st.write("Production columns:", prod_df.columns)
+st.write("Delivered columns:", deliv_df.columns)
+st.write(prod_df.head())
+st.write(deliv_df.head())
+
+
 # ---------------------------
 # Footer
 # ---------------------------
