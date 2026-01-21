@@ -12,8 +12,8 @@ st.set_page_config(
 # ---------------------------
 # Load data
 # ---------------------------
-prod_df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQdXkqjpQkKY9ClQkRr30RsrbBhytn7sVR-N1TZN2wP7M_GYebkK5HU46p20j6VTIyEiTi8IXZBY7Aj/pubhtml", parse_dates=["eventDate"])
-deliv_df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQVjgekM5TgKySYpBFbvjgjtasnPKp9mh0Oe-2UOQ01A8bWrWrPLh79-ERPJJkwzQSxmiqagVMxqjdP/pubhtml", parse_dates=["deliveredDate"])
+prod_df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQdXkqjpQkKY9ClQkRr30RsrbBhytn7sVR-N1TZN2wP7M_GYebkK5HU46p20j6VTIyEiTi8IXZBY7Aj", parse_dates=["eventDate"])
+deliv_df = pd.read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQVjgekM5TgKySYpBFbvjgjtasnPKp9mh0Oe-2UOQ01A8bWrWrPLh79-ERPJJkwzQSxmiqagVMxqjdP", parse_dates=["deliveredDate"])
 
 # Filter 2025
 prod_df = prod_df[prod_df["eventDate"].dt.year == 2025]
