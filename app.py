@@ -25,7 +25,15 @@ def load_data():
     return prod, deliv
 
 # Load data
-prod_df, deliv_df = load_data()
+# Load delivered sheet
+deliv = pd.read_csv(DELIV_URL)
+
+# Clean column names
+deliv.columns = deliv.columns.str.strip().str.replace(" ", "_").str.lower()
+
+# Show exactly what Streamlit sees
+st.write("Delivered sheet columns:", deliv.columns.tolist())
+st.write(deliv.head())
 
 # Debug: show first few rows
 st.write("Production columns:", prod_df.columns.tolist())
