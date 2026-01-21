@@ -1,53 +1,55 @@
 import streamlit as st
 import pandas as pd
 
+# ---------------------------
+# URLs
+# ---------------------------
 PROD_URL = "https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_jfdtfvxbgjYPYsWVk/gviz/tq?tqx=out:csv&sheet=production_on_time"
 DELIV_URL = "https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_jfdtfvxbgjYPYsWVk/gviz/tq?tqx=out:csv&sheet=delivered_on_time"
 
+# ---------------------------
+# Load Data
+# ---------------------------
 @st.cache_data(ttl=300)
 def load_data():
-    # Load both sheets
-    prod = pd.read_csv("https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_jfdtfvxbgjYPYsWVk/gviz/tq?tqx=out:csv&sheet=production_on_time")
-    deliv = pd.read_csv("https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_jfdtfvxbgjYPYsWVk/gviz/tq?tqx=out:csv&sheet=delivered_on_time")
+    # Load CSVs
+    prod = pd.read_csv(PROD_URL)
+    deliv = pd.read_csv(DELIV_URL)
 
-    # Normalize column names (lowercase, replace spaces with _)
+    # Normalize column names
     prod.columns = prod.columns.str.strip().str.replace(" ", "_").str.lower()
     deliv.columns = deliv.columns.str.strip().str.replace(" ", "_").str.lower()
 
-    # Parse date columns safely
+    # Debug: check column names
+    # st.write("Prod columns:", prod.columns.tolist())
+    # st.write("Deliv columns:", deliv.columns.tolist())
+
+    # Parse dates
     prod["eventdate"] = pd.to_datetime(prod["eventdate"], errors="coerce")
-    deliv["delivered_date"] = pd.to_datetime(deliv["delivered_date"], errors="coerce")  # now matches normalized column
+    # Adjusted to actual normalized column name from Google Sheet
+    deliv["delivereddate"] = pd.to_datetime(deliv["delivereddate"], errors="coerce")
 
     # Filter for 2025
     prod = prod[prod["eventdate"].dt.year == 2025]
-    deliv = deliv[deliv["delivered_date"].dt.year == 2025]
+    deliv = deliv[deliv["delivereddate"].dt.year == 2025]
 
     return prod, deliv
 
-# Load data
 prod_df, deliv_df = load_data()
 
-# Debug
-st.write("Production columns:", prod_df.columns.tolist())
-st.write(prod_df.head())
-st.write("Delivered columns:", deliv_df.columns.tolist())
-st.write(deliv_df.head())
-
 # ---------------------------
-# Merge supplier into production
+# Merge supplier info into production
 # ---------------------------
 joined_df = prod_df.merge(
-    deliv_df[
-        ["soReference", "supplier", "delivered_on-time", "delivery_country_code", "deliveredDate"]
-    ],
-    left_on="salesOrderReference",
-    right_on="soReference",
+    deliv_df[["soreference", "supplier", "delivered_on-time", "delivery_country_code", "delivereddate"]],
+    left_on="salesorderreference",
+    right_on="soreference",
     how="left"
 )
 joined_df["supplier"] = joined_df["supplier"].fillna("UNKNOWN")
 
 # ---------------------------
-# Sidebar filters
+# Sidebar Filters
 # ---------------------------
 st.sidebar.header("Filters")
 
@@ -75,14 +77,11 @@ deliv_df = deliv_df[deliv_df["delivery_country_code"].isin(country_filter)]
 # ---------------------------
 # KPI calculations
 # ---------------------------
-prod_ot = joined_df["producedOnTime"].mean()
+prod_ot = joined_df["producedontime"].mean()
 del_ot = deliv_df["delivered_on-time"].mean()
 
 PROD_SLA = 0.95
 DEL_SLA = 0.95
-
-def kpi_color(value, sla):
-    return "green" if value >= sla else "red"
 
 # ---------------------------
 # Header
@@ -110,12 +109,12 @@ kpi2.metric(
 )
 
 # ---------------------------
-# Monthly vs YTD logic
+# Monthly vs YTD
 # ---------------------------
-prod_df["month"] = prod_df["eventDate"].dt.month
-deliv_df["month"] = deliv_df["deliveredDate"].dt.month
+prod_df["month"] = prod_df["eventdate"].dt.month
+deliv_df["month"] = deliv_df["delivereddate"].dt.month
 
-monthly_prod = prod_df.groupby("month")["producedOnTime"].mean().reset_index()
+monthly_prod = prod_df.groupby("month")["producedontime"].mean().reset_index()
 monthly_del = deliv_df.groupby("month")["delivered_on-time"].mean().reset_index()
 
 monthly_perf = monthly_prod.merge(
@@ -129,7 +128,7 @@ st.subheader("Fulfillment Performance Trend")
 
 if view_mode == "Monthly":
     st.line_chart(
-        monthly_perf.set_index("month")[["producedOnTime_prod", "delivered_on-time_deliv"]]
+        monthly_perf.set_index("month")[["producedontime_prod", "delivered_on-time_deliv"]]
     )
 else:
     ytd_df = pd.DataFrame({
@@ -144,7 +143,7 @@ else:
 st.subheader("Supplier Performance")
 
 supplier_perf = joined_df.groupby("supplier").agg(
-    Orders=("salesOrderReference", "count"),
+    Orders=("salesorderreference", "count"),
     Delivered_On_Time=("delivered_on-time", "mean")
 ).reset_index().sort_values("Delivered_On_Time", ascending=False)
 
@@ -158,7 +157,7 @@ st.dataframe(
 st.subheader("Delivery Country Performance")
 
 country_perf = deliv_df.groupby("delivery_country_code").agg(
-    Orders=("soReference", "count"),
+    Orders=("soreference", "count"),
     Delivered_On_Time=("delivered_on-time", "mean")
 ).reset_index().sort_values("Delivered_On_Time", ascending=False)
 
@@ -170,3 +169,4 @@ st.dataframe(
 # Footer
 # ---------------------------
 st.caption("Built with Python, SQL logic, and Streamlit | Portfolio-ready analytics")
+
