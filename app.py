@@ -20,13 +20,8 @@ def load_data():
     prod.columns = prod.columns.str.strip().str.replace(" ", "_").str.lower()
     deliv.columns = deliv.columns.str.strip().str.replace(" ", "_").str.lower()
 
-    # Debug: check column names
-    # st.write("Prod columns:", prod.columns.tolist())
-    # st.write("Deliv columns:", deliv.columns.tolist())
-
     # Parse dates
     prod["eventdate"] = pd.to_datetime(prod["eventdate"], errors="coerce")
-    # Adjusted to actual normalized column name from Google Sheet
     deliv["delivereddate"] = pd.to_datetime(deliv["delivereddate"], errors="coerce")
 
     # Filter for 2025
@@ -46,6 +41,8 @@ joined_df = prod_df.merge(
     right_on="soreference",
     how="left"
 )
+
+# Fill missing suppliers
 joined_df["supplier"] = joined_df["supplier"].fillna("UNKNOWN")
 
 # ---------------------------
@@ -75,7 +72,7 @@ joined_df = joined_df[joined_df["supplier"].isin(supplier_filter)]
 deliv_df = deliv_df[deliv_df["delivery_country_code"].isin(country_filter)]
 
 # ---------------------------
-# KPI calculations
+# KPI Calculations
 # ---------------------------
 prod_ot = joined_df["producedontime"].mean()
 del_ot = deliv_df["delivered_on-time"].mean()
@@ -95,14 +92,14 @@ st.caption("Production & Delivery Performance | Supplier & Country Analytics")
 kpi1, kpi2 = st.columns(2)
 
 kpi1.metric(
-    "Production On-Time",
+    "On-Time Production Rate",
     f"{prod_ot:.0%}",
     delta=f"{prod_ot - PROD_SLA:.0%} vs SLA",
     delta_color="normal" if prod_ot >= PROD_SLA else "inverse"
 )
 
 kpi2.metric(
-    "Delivered On-Time",
+    "On-Time Delivery Rate",
     f"{del_ot:.0%}",
     delta=f"{del_ot - DEL_SLA:.0%} vs SLA",
     delta_color="normal" if del_ot >= DEL_SLA else "inverse"
@@ -132,7 +129,7 @@ if view_mode == "Monthly":
     )
 else:
     ytd_df = pd.DataFrame({
-        "Metric": ["Production On-Time", "Delivered On-Time"],
+        "Metric": ["On-Time Production Rate", "On-Time Delivery Rate"],
         "YTD %": [prod_ot, del_ot]
     })
     st.table(ytd_df.style.format({"YTD %": "{:.0%}"}))
@@ -169,4 +166,3 @@ st.dataframe(
 # Footer
 # ---------------------------
 st.caption("Built with Python, SQL logic, and Streamlit | Portfolio-ready analytics")
-
