@@ -7,8 +7,8 @@ DELIV_URL = "https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_j
 @st.cache_data(ttl=300)
 def load_data():
     # Load both sheets
-    prod = pd.read_csv(PROD_URL)
-    deliv = pd.read_csv(DELIV_URL)
+    prod = pd.read_csv("https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_jfdtfvxbgjYPYsWVk/gviz/tq?tqx=out:csv&sheet=production_on_time")
+    deliv = pd.read_csv("https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_jfdtfvxbgjYPYsWVk/gviz/tq?tqx=out:csv&sheet=delivered_on_time")
 
     # Normalize column names (lowercase, replace spaces with _)
     prod.columns = prod.columns.str.strip().str.replace(" ", "_").str.lower()
@@ -16,11 +16,11 @@ def load_data():
 
     # Parse date columns safely
     prod["eventdate"] = pd.to_datetime(prod["eventdate"], errors="coerce")
-    deliv["delivereddate"] = pd.to_datetime(deliv["delivereddate"], errors="coerce")  # now matches normalized column
+    deliv["delivered_date"] = pd.to_datetime(deliv["delivered_date"], errors="coerce")  # now matches normalized column
 
     # Filter for 2025
     prod = prod[prod["eventdate"].dt.year == 2025]
-    deliv = deliv[deliv["delivereddate"].dt.year == 2025]
+    deliv = deliv[deliv["delivered_date"].dt.year == 2025]
 
     return prod, deliv
 
