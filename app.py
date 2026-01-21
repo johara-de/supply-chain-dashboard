@@ -8,6 +8,14 @@ DELIV_URL = "https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_j
 def load_data():
     prod = pd.read_csv(PROD_URL)
     deliv = pd.read_csv(DELIV_URL)
+    
+# Debug: show all column names
+st.write("Delivered sheet columns:", deliv.columns.tolist())
+st.write(deliv.head())
+
+deliv.columns = deliv.columns.str.strip().str.replace(" ", "_").str.lower()
+# Example: 'Delivered Date' -> 'delivered_date'
+deliv["delivered_date"] = pd.to_datetime(deliv["delivered_date"], errors="coerce")
 
     # Safe date parsing
     prod["eventDate"] = pd.to_datetime(prod["eventDate"], errors="coerce")
