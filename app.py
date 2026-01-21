@@ -12,21 +12,34 @@ DELIV_URL = "https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_j
 # ---------------------------
 @st.cache_data(ttl=300)
 def load_data():
-    # Load CSVs
     prod = pd.read_csv(PROD_URL)
     deliv = pd.read_csv(DELIV_URL)
 
     # Normalize column names
-    prod.columns = prod.columns.str.strip().str.replace(" ", "_").str.lower()
-    deliv.columns = deliv.columns.str.strip().str.replace(" ", "_").str.lower()
+    prod.columns = prod.columns.str.strip().str.lower().str.replace(" ", "_")
+    deliv.columns = deliv.columns.str.strip().str.lower().str.replace(" ", "_")
+
+    # Debug columns
+    # st.write("Production columns:", prod.columns.tolist())
+    # st.write("Delivery columns:", deliv.columns.tolist())
 
     # Parse dates
     prod["eventdate"] = pd.to_datetime(prod["eventdate"], errors="coerce")
-    deliv["delivereddate"] = pd.to_datetime(deliv["delivereddate"], errors="coerce")
+    
+    # Rename delivereddate -> shipment
+    if "delivereddate" in deliv.columns:
+        deliv.rename(columns={"delivereddate": "shipment"}, inplace=True)
+    else:
+        # Safe fallback if there’s a hidden space
+        shipment_col = [c for c in deliv.columns if "delivereddate" in c.lower().replace(" ", "")]
+        if shipment_col:
+            deliv.rename(columns={shipment_col[0]: "shipment"}, inplace=True)
+
+    deliv["shipment"] = pd.to_datetime(deliv["shipment"], errors="coerce")
 
     # Filter for 2025
     prod = prod[prod["eventdate"].dt.year == 2025]
-    deliv = deliv[deliv["delivereddate"].dt.year == 2025]
+    deliv = deliv[deliv["shipment"].dt.year == 2025]
 
     return prod, deliv
 
@@ -36,7 +49,7 @@ prod_df, deliv_df = load_data()
 # Merge supplier info into production
 # ---------------------------
 joined_df = prod_df.merge(
-    deliv_df[["soreference", "supplier", "delivered_on-time", "delivery_country_code", "delivereddate"]],
+    deliv_df[["soreference", "supplier", "delivered_on-time", "delivery_country_code", "shipment"]],
     left_on="salesorderreference",
     right_on="soreference",
     how="left"
@@ -109,7 +122,7 @@ kpi2.metric(
 # Monthly vs YTD
 # ---------------------------
 prod_df["month"] = prod_df["eventdate"].dt.month
-deliv_df["month"] = deliv_df["delivereddate"].dt.month
+deliv_df["month"] = deliv_df["shipment"].dt.month
 
 monthly_prod = prod_df.groupby("month")["producedontime"].mean().reset_index()
 monthly_del = deliv_df.groupby("month")["delivered_on-time"].mean().reset_index()
@@ -166,3 +179,4 @@ st.dataframe(
 # Footer
 # ---------------------------
 st.caption("Built with Python, SQL logic, and Streamlit | Portfolio-ready analytics")
+
