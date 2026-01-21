@@ -1,23 +1,26 @@
 import streamlit as st
 import pandas as pd
 
-# ---------------------------
-# Page config
-# ---------------------------
-st.set_page_config(
-    page_title="Supply Chain Fulfillment Dashboard",
-    layout="wide"
-)
+PROD_URL = "https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_jfdtfvxbgjYPYsWVk/gviz/tq?tqx=out:csv&sheet=production_on_time"
+DELIV_URL = "https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_jfdtfvxbgjYPYsWVk/gviz/tq?tqx=out:csv&sheet=delivered_on_time"
 
-# ---------------------------
-# Load data
-# ---------------------------
-prod_df = pd.read_csv("https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_jfdtfvxbgjYPYsWVk/gviz/tq?tqx=out:csv&sheet=production_on_time", parse_dates=["eventDate"])
-deliv_df = pd.read_csv("https://docs.google.com/spreadsheets/d/13AUingDUvNEhDpvJviIvs6wZr_c9Ifb6OYeFHN8tK-k/gviz/tq?tqx=out:csv&sheet=delivered_on_time", parse_dates=["deliveredDate"])
+@st.cache_data(ttl=300)
+def load_data():
+    prod = pd.read_csv(PROD_URL)
+    deliv = pd.read_csv(DELIV_URL)
 
-# Filter 2025
-prod_df = prod_df[prod_df["eventDate"].dt.year == 2025]
-deliv_df = deliv_df[deliv_df["deliveredDate"].dt.year == 2025]
+    # Safe date parsing
+    prod["eventDate"] = pd.to_datetime(prod["eventDate"], errors="coerce")
+    deliv["deliveredDate"] = pd.to_datetime(deliv["deliveredDate"], errors="coerce")
+
+    # Filter 2025
+    prod = prod[prod["eventDate"].dt.year == 2025]
+    deliv = deliv[deliv["deliveredDate"].dt.year == 2025]
+
+    return prod, deliv
+
+prod_df, deliv_df = load_data()
+st.write("Data loaded successfully ✅")
 
 # ---------------------------
 # Merge supplier into production
