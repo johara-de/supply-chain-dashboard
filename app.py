@@ -1,24 +1,37 @@
 import streamlit as st
 import pandas as pd
 
-# URLs for your Google Sheets
 PROD_URL = "https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_jfdtfvxbgjYPYsWVk/gviz/tq?tqx=out:csv&sheet=production_on_time"
 DELIV_URL = "https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_jfdtfvxbgjYPYsWVk/gviz/tq?tqx=out:csv&sheet=delivered_on_time"
 
-# Load both sheets
-prod = pd.read_csv(PROD_URL)
-deliv = pd.read_csv(DELIV_URL)
+@st.cache_data(ttl=300)
+def load_data():
+    # Load both sheets
+    prod = pd.read_csv(PROD_URL)
+    deliv = pd.read_csv(DELIV_URL)
 
-# Clean column names for safety
-prod.columns = prod.columns.str.strip().str.replace(" ", "_").str.lower()
-deliv.columns = deliv.columns.str.strip().str.replace(" ", "_").str.lower()
+    # Normalize column names (lowercase, replace spaces with _)
+    prod.columns = prod.columns.str.strip().str.replace(" ", "_").str.lower()
+    deliv.columns = deliv.columns.str.strip().str.replace(" ", "_").str.lower()
 
-# Show column names and first few rows
-st.write("Production sheet columns:", prod.columns.tolist())
-st.write(prod.head())
+    # Parse date columns safely
+    prod["eventdate"] = pd.to_datetime(prod["eventdate"], errors="coerce")
+    deliv["delivereddate"] = pd.to_datetime(deliv["delivereddate"], errors="coerce")  # now matches normalized column
 
-st.write("Delivered sheet columns:", deliv.columns.tolist())
-st.write(deliv.head())
+    # Filter for 2025
+    prod = prod[prod["eventdate"].dt.year == 2025]
+    deliv = deliv[deliv["delivereddate"].dt.year == 2025]
+
+    return prod, deliv
+
+# Load data
+prod_df, deliv_df = load_data()
+
+# Debug
+st.write("Production columns:", prod_df.columns.tolist())
+st.write(prod_df.head())
+st.write("Delivered columns:", deliv_df.columns.tolist())
+st.write(deliv_df.head())
 
 # ---------------------------
 # Merge supplier into production
