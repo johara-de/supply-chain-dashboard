@@ -7,7 +7,7 @@ st.set_page_config(page_title="Supply Chain Dashboard", layout="wide")
 # DATA SOURCES
 # ===========================
 PROD_URL = "https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_jfdtfvxbgjYPYsWVk/gviz/tq?tqx=out:csv&sheet=produced_on_time"
-DELIV_URL = "https://docs.google.com/spreadsheets/d/1s928UrG19mxzVKWex31TJLu3c_jfdtfvxbgjYPYsWVk/gviz/tq?tqx=out:csv&sheet=delivered_on_time"
+DELIV_URL = "https://docs.google.com/spreadsheets/d/13AUingDUvNEhDpvJviIvs6wZr_c9Ifb6OYeFHN8tK-k/gviz/tq?tqx=out:csv&sheet=delivered_on_time"
 
 # ===========================
 # LOAD DATA (SAFE)
