@@ -28,6 +28,8 @@ html, body { margin: 0; background: var(--color-bg); }
 #dash-root { --dash-gutter: 0; }
 
 #dash-root { --dash-gutter: 0; }
+
+#dash-root { --dash-gutter: 0; }
 /* One palette (DTC Concessions): dark purple = main series / best band, medium purple = second series / 75-85%, lilac = late counts / under 75%, greys = unknown or allowed */
 .nx { --nx-purple: #2C1847; --nx-ink: #2C1847; --nx-grey: #6B6670; --nx-canvas: #F8F5EF; --nx-link: #2C1847;
   /* DTC Concessions palette */
@@ -661,7 +663,7 @@ html, body { margin: 0; background: var(--color-bg); }
     txt(q('.js-k-noreason'), f0(R.noReason));
     txt(q('.js-s-noreason'), (k.late ? p0(R.noReason / k.late) + ' of late shipments' : '') + CT(() => `${f0(k.custNoReason)} of ${f0(k.custLate)} late`));
     txt(q('.js-k-adv'), or(k.avgAdv, f1));
-    txt(q('.js-s-adv'), 'Days ahead of ATA');
+    txt(q('.js-s-adv'), 'Days ahead of ATA' + CT(() => n1(k.custAvgAdv) + ' days ahead'));
     txt(q('.js-k-maxadv'), or(k.maxAdv, f0));
     txt(q('.js-s-maxadv'), 'Furthest ahead of ATA' + CT(() => nInt(k.custMaxAdv) + ' days ahead'));
     txt(q('.js-k-ontimen'), f0(k.scored - k.late));
